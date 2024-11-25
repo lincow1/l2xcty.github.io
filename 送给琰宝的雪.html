@@ -1,0 +1,440 @@
+
+<!DOCTYPE html>
+<html>
+ 
+<head>
+    <meta charset="UTF-8">
+		<title></title>
+		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome/css/font-awesome.min.css">
+    <meta charset="utf-8">
+    <title>CSS引用外部字体</title>
+    <link rel="stylesheet" type="text/css" href="font.css">
+	<meta http-equiv="Content-Type" content="text/html; charset=GBK">
+	<style>
+		* {
+			margin: 0;
+			padding: 0;
+		}
+ 
+		#box {
+			width: 100vw;
+			height: 100vh;
+			padding: 3px;
+			position: absolute;
+			background: black;
+		}
+        
+        .font3 > p {
+            font-size: 40px;
+            text-shadow: 5px 5px 5px white, 0px 0px 2px rgb(255, 255, 255); 
+            color: white;
+        }
+	</style>
+</head>
+ 
+<body>
+	<div id="box",class="font3">
+        <p>
+            <i>送给琰宝的雪</i>
+        
+        <p>
+	</div>
+
+</body>
+<script src="https://cdn.jsdelivr.net/gh/stevenjoezhang/live2d-widget/autoload.js"></script>
+<script >
+    function drawStar() {
+    //定义数组，arr存放每个小星星的信息，colour为颜色数组，存几个好看的颜色
+    var arr = [];
+    var colours = ["#ffff00", "#66ffff", "#3399ff", "#99ff00", "#ff9900"];
+    var timeoutList = []; // 计时器列表-用于后续清理计时器
+  
+    // 创建画布
+    const canvas = document.createElement('canvas')
+    document.body.appendChild(canvas)
+    var ctx = canvas.getContext("2d");
+  
+    // 让画布自适应窗口大小，这个复制即可
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    resizeCanvas();
+  
+    // 给画布css样式，固定定位，且阻止用户的鼠标事件
+    canvas.style.cssText = `
+      position: fixed;
+      z-index: 1000;
+      top: 0;
+      left: 0;
+      pointer-events: none;
+    `;
+  
+    // 封装绘制一个五角星函数
+    // x是圆心横坐标，y是圆心纵坐标，其实就是鼠标位置（x ，y）
+    // r是里面小圆半径 ，l是大圆半径
+    // rot是初始旋转角度
+    function star(x, y, r, l, rot) {
+      ctx.beginPath();
+      // 循环5次，因为5个点
+      for (let i = 0; i < 5; i++) {
+        //先绘制小圆上一个点
+        ctx.lineTo(
+          Math.cos(((18 + i * 72 - rot) * Math.PI) / 180) * r + x,
+          -Math.sin(((18 + i * 72 - rot) * Math.PI) / 180) * r + y
+        );
+        //连线到大圆上一个点
+        ctx.lineTo(
+          Math.cos(((54 + i * 72 - rot) * Math.PI) / 180) * l + x,
+          -Math.sin(((54 + i * 72 - rot) * Math.PI) / 180) * l + y
+        );
+      }
+      ctx.closePath();
+    }
+  
+    // 绘制一堆星星
+    function draw() {
+      //循环数组
+      for (let i = 0; i < arr.length; i++) {
+        let temp = arr[i];
+        //调用绘制一个星星函数
+        star(temp.x, temp.y, temp.r, temp.r * 3, temp.rot);
+        //星星颜色
+        ctx.fillStyle = temp.color;
+        //星星边框颜色
+        ctx.strokeStyle = temp.color;
+        //线宽度
+        ctx.lineWidth = 0.1;
+        //角有弧度
+        ctx.lineJoin = "round";
+        // 填充
+        ctx.fill();
+        // 绘制路径
+        ctx.stroke();
+      }
+    }
+  
+    //更新动画
+    function update() {
+      //循环数组
+      for (let i = 0; i < arr.length; i++) {
+        // x坐标+dx移动距离
+        arr[i].x += arr[i].dx;
+        // y坐标+dy移动距离
+        arr[i].y += arr[i].dy;
+        // 加上旋转角度
+        arr[i].rot += arr[i].td;
+        // 半径慢慢减小
+        arr[i].r -= 0.015;
+        // 当半径小于0时
+        if (arr[i].r < 0) {
+          //删除该星星
+          arr.splice(i, 1);
+        }
+      }
+    }
+  
+    // 添加当前位置星星数据
+    function addStarts(e) {
+      // 每移动触发一次事件给arr数组添加一个星星
+      arr.push({
+        // x是初始横坐标
+        x: e.clientX,
+        //y是初始纵坐标
+        y: e.clientY,
+        //r是星星里面那个小圆半径，哪来的小圆等会说
+        r: Math.random() * 0.5 + 1.5,
+        //运动时旋转的角度
+        td: Math.random() * 4 - 2,
+        // X轴移动距离
+        dx: Math.random() * 2 - 1,
+        // y轴移动距离
+        dy: Math.random() * 1 + 1,
+        // 初始的旋转角度
+        rot: Math.random() * 90 + 90,
+        // 颜色
+        color: colours[Math.floor(Math.random() * colours.length)],
+      });
+    }
+  
+    // 监听屏幕变化事件
+    window.onresize = resizeCanvas;
+  
+    // 监听鼠标移动事件
+    window.addEventListener("mousemove", (e) => {
+      // 添加星星数据
+      addStarts(e);
+  
+      //设置100毫秒内效果
+      for (let index = 0; index < 200; index++) {
+        if (index === 0 && timeoutList.length > 0) {
+          for (const timeoutName of timeoutList) {
+            clearTimeout(timeoutName)
+          }
+        }
+        timeoutList[index] = setTimeout(() => {
+          //清屏
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          //绘制
+          draw();
+          //更新
+          update();
+        }, index * 20);
+      }
+    });
+  }
+  
+  drawStar()
+</script>
+
+<script>
+	(function () {
+		var screenWidth = screen.availWidth; // 获取屏幕宽度
+		var screenHeight = screen.availHeight; // 获取屏幕高度
+		var speed = 1; // 雪花下落的速度
+ 
+		function Snow(size, downSize) {
+			this.box = document.getElementById("box"); // 获取容器元素
+			this.size = size; // 雪花数量
+			this.downSize = downSize || 10; // 每次落下的雪花数量，默认为10个
+			this.item = []; // 雪花元素数组
+			this.init(); // 初始化
+			this.start(); // 开始下雪
+		}
+ 
+		// 获取相关随机数据的方法
+		Snow.prototype.getRandomThings = function (type) {
+			var res;
+			if (type == 'left') { // 初始的left
+				res = Math.round(Math.random() * (screenWidth - 30 - 10)) + 10; // 随机生成left值
+				Math.random() > 0.8 ? (res = -res) : null; // 80%的概率使左边的雪花出现在左侧（left为负值）
+			} else if (type == 'top') { // 初始的top
+				res = -(Math.round(Math.random() * (50 - 40)) + 40); // 随机生成top值，负值使雪花在屏幕上方
+			} else if (type == 'incre') { // 向下的速度
+				res = Math.random() * (4 - 1) + 1; // 随机生成向下的速度
+			} else if (type == 'increLeft') { // 向右的速度
+				res = Math.random() * (0.8 - 0.5) + 0.5; // 随机生成向右的速度
+			} else { // 雪花的大小
+				res = Math.round(Math.random() * (30 - 10)) + 10; // 随机生成雪花的大小
+			}
+			return res;
+		}
+ 
+		Snow.prototype.init = function () {
+			this.box.style.width = screenWidth + 'px'; // 设置容器宽度为屏幕宽度
+			this.box.style.height = screenHeight + 'px'; // 设置容器高度为屏幕高度
+			var fragment = document.createDocumentFragment(); // 创建文档片段，用于性能优化
+			for (var i = 0; i < this.size; i++) { // 创建雪花元素
+				var left = this.getRandomThings('left'); // 获取随机的left值
+				var top = this.getRandomThings('top'); // 获取随机的top值
+				var snowSize = this.getRandomThings('size'); // 获取随机的雪花大小
+				var snow = document.createElement("div"); // 创建雪花元素
+				snow.style.cssText = 'position:absolute;color:#FFFFFF;'; // 设置元素样式
+				snow.style['font-size'] = snowSize + 'px'; // 设置字体大小
+				snow.style.left = left + 'px'; // 设置left值
+				snow.style.top = top + 'px'; // 设置top值
+				snow.innerHTML = '&#10052'; // 设置雪花图标（Unicode编码）
+				this.item.push(snow); // 添加到雪花元素数组中
+				fragment.appendChild(snow); // 添加到文档片段中
+			}
+			box.appendChild(fragment); // 将文档片段添加到容器中
+		}
+ 
+		Snow.prototype.start = function () {
+			var that = this;
+			var num = 0;
+			for (var i = 0; i < this.size; i++) { // 遍历雪花元素数组
+				var snow = this.item[i];
+				if ((i + 1) % this.downSize == 0) { // 每downSize个雪花一组，控制下落速度
+					num++;
+				}
+				(function (s, n) { // 使用闭包保存snow和num的值
+					setTimeout(function () { // 定时器，实现雪花分批下落
+						that.doStart(s); // 调用doStart方法使雪花开始下落
+					}, 1000 * n) // 每隔n秒下落一组雪花
+				})(snow, num)
+			}
+		}
+ 
+		// 针对每个雪花的定时处理
+		Snow.prototype.doStart = function (snow) {
+			var that = this;
+			(function (s) {
+				var increTop = that.getRandomThings('incre'); // 获取向下的速度
+				var increLeft = that.getRandomThings('increLeft'); // 获取向右的速度
+				var x = parseInt(getStyle(s, 'left')), y = parseInt(getStyle(s, 'top')); // 获取当前的left和top值
+ 
+				if (s.timmer) return; // 如果定时器已存在，则不执行后续代码
+				s.timmer = setInterval(function () { // 设置定时器，使雪花动起来
+					// 超过右边或者底部重新开始
+					if (y > (screenHeight - 5) || x > (screenWidth - 30)) {
+						// 重新回到天上开始往下
+						increTop = that.getRandomThings('incre');
+						increLeft = that.getRandomThings('increLeft');
+ 
+						// 重新随机属性
+						var left = that.getRandomThings('left');
+						var top = that.getRandomThings('top');
+						var snowSize = that.getRandomThings('size');
+						s.style.left = left + 'px';
+						s.style.top = top + 'px';
+						s.style['font-size'] = snowSize + 'px';
+						y = top;
+						x = left;
+						n = 0;
+ 
+						return;
+					}
+ 
+					// 加上系数，当随机数大于0.5时速度加快，小于0.5时速度减慢，形成飘动效果
+					x += Math.random() > 0.5 ? increLeft * 1.1 : increLeft * 0.9;
+					y += Math.random() > 0.5 ? increTop * 1.1 : increTop * 0.9;
+ 
+					// 设置left和top值使雪花动起来
+					s.style.left = x + 'px';
+					s.style.top = y + 'px';
+				}, speed); // 每隔speed毫秒执行一次定时器中的代码
+			})(snow)
+		}
+ 
+		// 获取元素的样式值
+		function getStyle(obj, prop) {
+			var prevComputedStyle = document.defaultView ? document.defaultView.getComputedStyle(obj, null) : obj.currentStyle;
+			return prevComputedStyle[prop];
+		}
+ 
+		new Snow(300, 30); // 创建一个Snow对象，传入雪花数量和每批下落的雪花数量
+	})()
+ 
+</script>
+<script type="text/javascript">
+    /* 控制下雪 */
+    function snowFall(snow) {
+        /* 可配置属性 */
+        snow = snow || {};
+        this.maxFlake = snow.maxFlake || 200;   /* 最多片数 */
+        this.flakeSize = snow.flakeSize || 10;  /* 雪花形状 */
+        this.fallSpeed = snow.fallSpeed || 1;   /* 坠落速度 */
+  }
+   /* 兼容写法 */
+   requestAnimationFrame = window.requestAnimationFrame ||
+       window.mozRequestAnimationFrame ||
+       window.webkitRequestAnimationFrame ||
+       window.msRequestAnimationFrame ||
+       window.oRequestAnimationFrame ||
+       function(callback) { setTimeout(callback, 1000 / 60); };
+
+   cancelAnimationFrame = window.cancelAnimationFrame ||
+       window.mozCancelAnimationFrame ||
+       window.webkitCancelAnimationFrame ||
+       window.msCancelAnimationFrame ||
+       window.oCancelAnimationFrame;
+   /* 开始下雪 */
+   snowFall.prototype.start = function(){
+       /* 创建画布 */
+       snowCanvas.apply(this);
+       /* 创建雪花形状 */
+       createFlakes.apply(this);
+       /* 画雪 */
+       drawSnow.apply(this)
+   }
+   /* 创建画布 */
+   function snowCanvas() {
+       /* 添加Dom结点 */
+       var snowcanvas = document.createElement("canvas");
+       snowcanvas.id = "snowfall";
+       snowcanvas.width = window.innerWidth;
+       snowcanvas.height = document.body.clientHeight;
+       snowcanvas.setAttribute("style", "position:absolute; top: 0; left: 0; z-index: 1; pointer-events: none;");
+       document.getElementsByTagName("body")[0].appendChild(snowcanvas);
+       this.canvas = snowcanvas;
+       this.ctx = snowcanvas.getContext("2d");
+       /* 窗口大小改变的处理 */
+       window.onresize = function() {
+           snowcanvas.width = window.innerWidth;
+           /* snowcanvas.height = window.innerHeight */
+       }
+   }
+   /* 雪运动对象 */
+   function flakeMove(canvasWidth, canvasHeight, flakeSize, fallSpeed) {
+       this.x = Math.floor(Math.random() * canvasWidth);   /* x坐标 */
+       this.y = Math.floor(Math.random() * canvasHeight);  /* y坐标 */
+       this.size = Math.random() * flakeSize + 2;          /* 形状 */
+       this.maxSize = flakeSize;                           /* 最大形状 */
+       this.speed = Math.random() * 1 + fallSpeed;         /* 坠落速度 */
+       this.fallSpeed = fallSpeed;                         /* 坠落速度 */
+       this.velY = this.speed;                             /* Y方向速度 */
+       this.velX = 0;                                      /* X方向速度 */
+       this.stepSize = Math.random() / 30;                 /* 步长 */
+       this.step = 0                                       /* 步数 */
+   }
+   flakeMove.prototype.update = function() {
+       var x = this.x,
+           y = this.y;
+       /* 左右摆动(余弦) */
+       this.velX *= 0.98;
+       if (this.velY <= this.speed) {
+           this.velY = this.speed
+       }
+       this.velX += Math.cos(this.step += .05) * this.stepSize;
+
+       this.y += this.velY;
+       this.x += this.velX;
+       /* 飞出边界的处理 */
+       if (this.x >= canvas.width || this.x <= 0 || this.y >= canvas.height || this.y <= 0) {
+           this.reset(canvas.width, canvas.height)
+       }
+   };
+   /* 飞出边界-放置最顶端继续坠落 */
+   flakeMove.prototype.reset = function(width, height) {
+       this.x = Math.floor(Math.random() * width);
+       this.y = 0;
+       this.size = Math.random() * this.maxSize + 2;
+       this.speed = Math.random() * 1 + this.fallSpeed;
+       this.velY = this.speed;
+       this.velX = 0;
+   };
+   // 渲染雪花-随机形状（此处可修改雪花颜色！！！）
+   flakeMove.prototype.render = function(ctx) {
+       var snowFlake = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.size);
+       snowFlake.addColorStop(0, "rgba(255, 255, 255, 0.9)");  /* 此处是雪花颜色，默认是白色 */
+       snowFlake.addColorStop(.5, "rgba(255, 255, 255, 0.5)"); /* 若要改为其他颜色，请自行查 */
+       snowFlake.addColorStop(1, "rgba(255, 255, 255, 0)");    /* 找16进制的RGB 颜色代码。 */
+       ctx.save();
+       ctx.fillStyle = snowFlake;
+       ctx.beginPath();
+       ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+       ctx.fill();
+       ctx.restore();
+  };
+  /* 创建雪花-定义形状 */
+  function createFlakes() {
+      var maxFlake = this.maxFlake,
+          flakes = this.flakes = [],
+          canvas = this.canvas;
+      for (var i = 0; i < maxFlake; i++) {
+          flakes.push(new flakeMove(canvas.width, canvas.height, this.flakeSize, this.fallSpeed))
+      }
+  }
+  /* 画雪 */
+  function drawSnow() {
+      var maxFlake = this.maxFlake,
+          flakes = this.flakes;
+      ctx = this.ctx, canvas = this.canvas, that = this;
+      /* 清空雪花 */
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (var e = 0; e < maxFlake; e++) {
+          flakes[e].update();
+          flakes[e].render(ctx);
+      }
+      /*  一帧一帧的画 */
+      this.loop = requestAnimationFrame(function() {
+          drawSnow.apply(that);
+      });
+  }
+  /* 调用及控制方法 */
+  var snow = new snowFall({maxFlake:60});
+  snow.start();
+  
+</script>
+</html>
